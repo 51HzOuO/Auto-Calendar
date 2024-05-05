@@ -41,7 +41,7 @@ def parse_time(time, webname):
 
 def operate_mouse(x, y, time, name):
     pyautogui.moveTo(x, y)
-    sleep(1)
+    # sleep(1)
     pyautogui.click()
     pyautogui.click()
     sleep(1)
@@ -50,20 +50,20 @@ def operate_mouse(x, y, time, name):
     # pyautogui.typewrite(name)
     pyperclip.copy(name)
     pyautogui.hotkey('ctrl', 'v')
-    sleep(1)
+    # sleep(1)
     pyautogui.moveTo(positions[6][0], positions[6][1])
     # sleep(1)
     pyautogui.click()
     pyautogui.moveTo(positions[7][0], positions[7][1])
-    sleep(1)
+    # sleep(1)
     pyautogui.click()
     pyautogui.typewrite(time)
     pyautogui.moveTo(positions[8][0], positions[8][1])
-    sleep(1)
+    # sleep(1)
     pyautogui.click()
     pyautogui.typewrite(time)
     pyautogui.moveTo(positions[9][0], positions[9][1])
-    sleep(1)
+    # sleep(1)
     pyautogui.click()
 
 def auto_calendar(time, name, webname):
@@ -80,23 +80,23 @@ def auto_calendar(time, name, webname):
     week = filtered_text.to_dict(orient='records')
 
     year, m, d, time_str = parse_time(time, webname)
-    maxn, minn = 0, 0
-    
+    maxn, minn = 0, 100
+    the_week = get_week_of_year(m, d, year)
+    the_day = get_day_of_week(m, d, year)
+
     for i in week:
         maxn = max(maxn, int (i['text']))
         minn = min(minn, int (i['text']))
 
     count = 0
-    while maxn < get_week_of_year(m, d, year) and count < 5:
+    while maxn < the_week and count < 5:
         count += 1
         pyautogui.moveTo(positions[4][0], positions[4][1])
         pyautogui.click()
         img_which_week = ImageGrab.grab(bbox=(positions[0][0], positions[0][1], positions[1][0], positions[1][1]))
-        img_which_day = ImageGrab.grab(bbox=(positions[0][0], positions[0][1], positions[2][0], positions[2][1]))
         custom_config = r'--oem 3 --psm 6'
 
         text_data_week = pytesseract.image_to_data(img_which_week, output_type=pytesseract.Output.DATAFRAME, lang='chi_sim+eng', config=custom_config)
-        text_data_day = pytesseract.image_to_data(img_which_day, output_type=pytesseract.Output.DATAFRAME, lang='chi_sim+eng', config=custom_config)
 
         pattern = r'\b([1-9]|[1-4][0-9]|5[0-3])\b'
         filtered_text = text_data_week[text_data_week['text'].astype(str).apply(lambda x: bool(re.search(pattern, x)))]
@@ -107,16 +107,14 @@ def auto_calendar(time, name, webname):
             minn = min(minn, int (i['text']))
 
     count = 0
-    while minn > get_week_of_year(m, d, year) and count < 5:
+    while minn > the_week and count < 5:
         count += 1
-        pyautogui.moveTo(positions[5][0], positions[5][1])
+        pyautogui.moveTo(positions[3][0], positions[3][1])
         pyautogui.click()
         img_which_week = ImageGrab.grab(bbox=(positions[0][0], positions[0][1], positions[1][0], positions[1][1]))
-        img_which_day = ImageGrab.grab(bbox=(positions[0][0], positions[0][1], positions[2][0], positions[2][1]))
         custom_config = r'--oem 3 --psm 6'
 
         text_data_week = pytesseract.image_to_data(img_which_week, output_type=pytesseract.Output.DATAFRAME, lang='chi_sim+eng', config=custom_config)
-        text_data_day = pytesseract.image_to_data(img_which_day, output_type=pytesseract.Output.DATAFRAME, lang='chi_sim+eng', config=custom_config)
 
         pattern = r'\b([1-9]|[1-4][0-9]|5[0-3])\b'
         filtered_text = text_data_week[text_data_week['text'].astype(str).apply(lambda x: bool(re.search(pattern, x)))]
@@ -130,9 +128,6 @@ def auto_calendar(time, name, webname):
     filtered_day = text_data_day[text_data_day['text'].astype(str).apply(lambda x: bool(re.search(pattern, x)))]
     filtered_day = filtered_day[['left', 'top', 'height', 'text']]
     day = filtered_day.to_dict(orient='records')
-    
-    the_week = get_week_of_year(m, d, year)
-    the_day = get_day_of_week(m, d, year)
 
     for y in week:
         if int (y['text']) == the_week:
@@ -160,7 +155,7 @@ def check_contest_exist(name, time, webname):
     conn.close()
 
 def get_codeforces_contest():
-    url = "https://codeforces.com/contests"
+    url = "https://codeforces.com/contests?complete=true"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     table = soup.find_all('table')[0]
@@ -190,7 +185,8 @@ def get_atcoder_contest():
     for contest in contests:
         name = contest.find_all('td')[1].find('a', href=True).text
         time = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', contest.find('time', class_= "fixtime-full").text.strip()).group(0)
-        check_contest_exist(name, time, 'atcoder')
+        if time > datetime.now().strftime("%Y-%m-%d %H:%M"):
+            check_contest_exist(name, time, 'atcoder')
 
 def get_luogu_contest():
     headers = {
@@ -242,8 +238,8 @@ if __name__ == "__main__":
 
     sleep(3)
     
-    get_codeforces_contest()
     get_nowcoder_contest()
+    get_codeforces_contest()
     get_atcoder_contest()
     get_luogu_contest()
     # get_lanqiao_contest()
