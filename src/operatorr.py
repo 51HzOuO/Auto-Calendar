@@ -1,12 +1,10 @@
-import os
-import sqlite3
 from time import sleep
 
 import pyautogui
 import pyperclip
-
+import sqlite3
 import utils
-
+import os
 
 def operate_mouse(x, y, time, name, positions):
     pyautogui.moveTo(x, y)

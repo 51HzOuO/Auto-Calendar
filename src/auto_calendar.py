@@ -1,16 +1,15 @@
+from datetime import datetime
+from bs4 import BeautifulSoup
+from urllib import parse
+from time import sleep
+
+import requests.utils
+import webbrowser
+import operatorr
+import requests
 import json
 import os
 import re
-import webbrowser
-from datetime import datetime
-from time import sleep
-from urllib import parse
-
-import requests
-import requests.utils
-from bs4 import BeautifulSoup
-
-from src import operator
 
 
 class auto_calendar:
@@ -43,7 +42,7 @@ class auto_calendar:
             cols = row.find_all('td')
             time = cols[2].get_text()
             name = cols[0].get_text()
-            operator.auto_calendar(name, time, 'codeforces', self.positions)
+            operatorr.auto_calendar(name, time, 'codeforces', self.positions)
 
     def get_nowcoder_contest(self):
         url = "https://ac.nowcoder.com/acm/contest/vip-index"
@@ -54,7 +53,8 @@ class auto_calendar:
             name = contest.find('a', href=True).text
             time = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
                              contest.find('li', class_="match-time-icon").text.strip()).group(0)
-            operator.auto_calendar(name, time, 'nowcoder', self.positions)
+            if time > datetime.now().strftime("%Y-%m-%d %H:%M"):
+                operatorr.auto_calendar(name, time, 'nowcoder', self.positions)
 
     def get_atcoder_contest(self):
         url = "https://atcoder.jp/contests/"
@@ -65,7 +65,7 @@ class auto_calendar:
             name = contest.find_all('td')[1].find('a', href=True).text
             time = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
                              contest.find('time', class_="fixtime-full").text.strip()).group(0)
-            operator.auto_calendar(name, time, 'atcoder', self.positions)
+            operatorr.auto_calendar(name, time, 'atcoder', self.positions)
 
     def get_luogu_contest(self):
         headers = {
@@ -86,4 +86,4 @@ class auto_calendar:
             if time > datetime.now().timestamp():
                 name = contest['name']
                 time = datetime.fromtimestamp(time).strftime("%Y-%m-%d %H:%M")
-                operator.auto_calendar(name, time, 'luogu', self.positions)
+                operatorr.auto_calendar(name, time, 'luogu', self.positions)
